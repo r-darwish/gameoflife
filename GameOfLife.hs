@@ -50,9 +50,7 @@ nextGen board =
 
 
 evolve :: Board -> [Board]
-evolve board =
-  let next = nextGen board
-  in next:evolve next
+evolve = iterate nextGen
 
 
 toText :: Board -> T.Text
