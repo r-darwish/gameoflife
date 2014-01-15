@@ -4,63 +4,49 @@ module GameOfLife
        , evolve
        , initBoard
        , setStates
-       , nextGen ) where
+       , nextGen
+       , toText
+       ) where
 import Data.List
-import Data.Maybe
-import qualified Data.Map as Map
+import Data.Array
+import System.IO
+import qualified Data.Text as T
 
 
 data State = Alive | Dead deriving (Eq, Show)
 type Coord = (Int,Int)
-data Cell = Cell { cellState :: State
-                 , cellCoord :: Coord } deriving Show
-data Board = Board { boardGrid :: (Map.Map Coord Cell)
-                   , boardWidth :: Int
-                   , boardHeight :: Int}
+type Board = Array Coord State
 
 
-initBoard :: Int -> Int -> Board
-initBoard width height =
-  let grid = Map.fromList $ [(c, Cell Dead c) | x <- [0..width - 1], y <- [0..height - 1], let c = (x,y)]
-  in Board grid width height
+initBoard :: Coord -> Board
+initBoard (width,height) =
+  let bounds = ((0,0),(width - 1,height - 1))
+  in array bounds $ zip (range bounds) (repeat Dead)
 
 
-setState :: Board -> State -> Coord -> Board
-setState (Board grid width height) state (x,y)
-  | y >= height || y < 0 = error "Height is off bounds"
-  | x >= width || x < 0 = error "Width is off bounds"
-  | otherwise =
-    let c = (x,y)
-        newGrid = Map.insert c (Cell state c) grid
-    in Board newGrid width height
+setStates :: Board -> [(Coord,State)] -> Board
+setStates = (//)
+
+getStates :: Board -> [Coord] -> [State]
+getStates board coords = map (board!) coords
 
 
-setStates :: Board -> State -> [Coord] -> Board
-setStates board state = foldl (\board coord -> setState board state coord) board
-
-
-neighbours :: Board -> Coord -> [Cell]
-neighbours (Board grid width height) c@(x,y)
-  | not (inBounds c) = error "Coordinate off bounds"
-  | otherwise =
-    let neighboursCoords = filter (/= c) $ filter inBounds [(x',y') | x' <- [x - 1..x + 1], y' <- [y - 1..y + 1]]
-    in map getCell neighboursCoords
-  where
-    inBounds (x,y) = x >= 0 && y >= 0 && x < width && y < height
-    getCell (x,y) = fromJust $ Map.lookup (x,y) grid
+neighbours :: Board -> Coord -> [Coord]
+neighbours board c@(x,y) =
+  filter (/= c) $ filter (inRange (bounds board)) [(x',y') | x' <- [x - 1..x + 1], y' <- [y - 1..y + 1]]
 
 
 nextGen :: Board -> Board
 nextGen board =
   let
-    livingNeighbours c = length $ filter (==Alive) $ map cellState (neighbours board c)
-    takeState state = map cellCoord $ filter (\c -> cellState c == state) $ Map.elems $ boardGrid board
-    underPop = filter (\coords -> (livingNeighbours coords) < 2) $ takeState Alive
-    overPop = filter (\coords -> (livingNeighbours coords) > 3) $ takeState Alive
-    newBorn = filter (\coords -> (livingNeighbours coords) == 3) $ takeState Dead
-    revive b = setStates b Alive newBorn
-    kill b = setStates b Dead (overPop ++ underPop)
-  in kill $ revive board
+    allCells = range (bounds board)
+    takeState state coords = map fst . filter (\(_,s) -> s == state) $ zip coords (getStates board coords)
+    livingNeighbours = length . takeState Alive . neighbours board
+    zipState state coords = zip coords (repeat state)
+    underPop = zipState Dead . filter (\c -> (livingNeighbours c) < 2) $ takeState Alive allCells
+    overPop = zipState Dead .filter (\c -> (livingNeighbours c) > 3) $ takeState Alive allCells
+    newBorn = zipState Alive .filter (\c -> (livingNeighbours c) == 3) $ takeState Dead allCells
+  in setStates board (concat [underPop, overPop, newBorn])
 
 
 evolve :: Board -> [Board]
@@ -69,13 +55,16 @@ evolve board =
   in next:evolve next
 
 
--- Show instances --
-
-instance Show Board where
-  show (Board grid width height) =
-    intercalate "\n" $ map gridLine [0..height - 1]
-    where gridLine l =
-            concat $ map (charState . cellState . fromJust) [Map.lookup (x,l) grid | x <- [0..width -1]]
-          charState state
-            | state == Dead = " "
-            | state == Alive = "@"
+toText :: Board -> T.Text
+toText board = T.intercalate (T.singleton '\n') (rows minY)
+  where
+    ((minX,minY),(maxX,maxY)) = bounds board
+    rows y
+      | y > maxY = []
+      | otherwise = (row y minX):rows (y + 1)
+    row y x
+      | x > maxX = T.empty
+      | otherwise = T.cons (stateToChar $ board!(x,y)) (row y (x + 1))
+    stateToChar state
+      | state == Alive = '@'
+      | otherwise = ' '
