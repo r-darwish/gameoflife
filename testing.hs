@@ -1,6 +1,6 @@
 import System.IO
 import System.Random
-import GameOfLife
+import GameOfLife.Game
 import System.Console.ANSI
 import Control.Concurrent
 import qualified Data.Text.IO as TIO

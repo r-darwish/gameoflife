@@ -1,4 +1,4 @@
-module GameOfLife
+module GameOfLife.Game
        ( State(..)
        , Board
        , evolve
