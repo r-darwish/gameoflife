@@ -2,6 +2,7 @@ import System.IO
 import System.Random
 import GameOfLife.Game
 import GameOfLife.Forms
+import GameOfLife.Text
 import System.Console.ANSI
 import Control.Concurrent
 import qualified Data.Text.IO as TIO
