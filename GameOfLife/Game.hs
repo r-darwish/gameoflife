@@ -12,17 +12,14 @@ import Data.List
 import Data.Array
 import System.IO
 
-
 data State = Alive | Dead deriving (Eq, Show)
 type Coord = (Int,Int)
 type Board = Array Coord State
-
 
 initBoard :: Coord -> Board
 initBoard (width,height) =
   let bounds = ((0,0),(width - 1,height - 1))
   in array bounds $ zip (range bounds) (repeat Dead)
-
 
 setStates :: Board -> [(Coord,State)] -> Board
 setStates = (//)
@@ -30,11 +27,9 @@ setStates = (//)
 getStates :: Board -> [Coord] -> [State]
 getStates board coords = map (board!) coords
 
-
 neighbours :: Board -> Coord -> [Coord]
 neighbours board c@(x,y) =
   filter (/= c) $ filter (inRange (bounds board)) [(x',y') | x' <- [x - 1..x + 1], y' <- [y - 1..y + 1]]
-
 
 nextGen :: Board -> Board
 nextGen board =
@@ -48,10 +43,8 @@ nextGen board =
     newBorn = zipState Alive .filter (\c -> (livingNeighbours c) == 3) $ takeState Dead allCells
   in setStates board (concat [underPop, overPop, newBorn])
 
-
 evolve :: Board -> [Board]
 evolve = iterate nextGen
-
 
 move :: Coord -> Coord -> Coord
 move (ox,oy) (x,y) = (ox+x,oy+y)

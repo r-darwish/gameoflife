@@ -1,12 +1,11 @@
 import System.IO
 import System.Random
-import GameOfLife.Game
-import GameOfLife.Forms
-import GameOfLife.Text
 import System.Console.ANSI
 import Control.Concurrent
 import qualified Data.Text.IO as TIO
-
+import GameOfLife.Game
+import GameOfLife.Forms
+import GameOfLife.Text
 
 x wSeed hSeed =
   let
@@ -17,7 +16,6 @@ x wSeed hSeed =
       where randomize seed upper n = (take n $ randomRs (0, upper - 1) (mkStdGen seed))
   in setStates board (zip coords $ repeat Alive)
 
-
 loop :: Board -> IO Board
 loop b = do
   clearScreen
@@ -25,7 +23,6 @@ loop b = do
   TIO.putStrLn $ toText b
   threadDelay 100000
   loop $ nextGen b
-
 
 main = let
   boardWidth = 20

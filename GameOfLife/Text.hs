@@ -6,7 +6,6 @@ import Data.Array
 import qualified Data.Text as T
 import GameOfLife.Game
 
-
 toText :: Board -> T.Text
 toText board = T.intercalate (T.singleton '\n') (rows minY)
   where
