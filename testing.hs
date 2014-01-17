@@ -25,12 +25,13 @@ loop b = do
   loop $ nextGen b
 
 main = let
-  boardWidth = 20
-  boardHeight = 20
+  boardWidth = 150
+  boardHeight = 70
   board = initBoard (boardWidth,boardHeight)
-  form = block
+  form = pulsar
+  space = 10
   (formWidth,formHeight) = size form
   blocks = concat [place board (x,y) form
-                  | x <- [0,(formWidth + 1)..(boardWidth - formWidth)]
-                  , y <- [0,(formHeight + 1)..(boardHeight - formHeight)]]
+                  | x <- [2,(formWidth + space)..(boardWidth - formWidth)]
+                  , y <- [2,(formHeight + space)..(boardHeight - formHeight)]]
   in do loop $ setStates board blocks
