@@ -1,6 +1,8 @@
 module GameOfLife.Game
        ( State(..)
        , Board
+       , Coord
+       , move
        , evolve
        , initBoard
        , setStates
@@ -51,6 +53,10 @@ nextGen board =
 
 evolve :: Board -> [Board]
 evolve = iterate nextGen
+
+
+move :: Coord -> Coord -> Coord
+move (ox,oy) (x,y) = (ox+x,oy+y)
 
 
 toText :: Board -> T.Text

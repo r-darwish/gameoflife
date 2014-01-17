@@ -1,6 +1,7 @@
 import System.IO
 import System.Random
 import GameOfLife.Game
+import GameOfLife.Forms
 import System.Console.ANSI
 import Control.Concurrent
 import qualified Data.Text.IO as TIO
@@ -25,5 +26,13 @@ loop b = do
   loop $ nextGen b
 
 
-main = do
-  loop (x 1523 1244)
+main = let
+  boardWidth = 20
+  boardHeight = 20
+  board = initBoard (boardWidth,boardHeight)
+  form = Block
+  (formWidth,formHeight) = size form
+  blocks = concat [place board (x,y) form
+                  | x <- [0,(formWidth + 1)..(boardWidth - formWidth)]
+                  , y <- [0,(formHeight + 1)..(boardHeight - formHeight)]]
+  in do loop $ setStates board blocks
