@@ -1,23 +1,21 @@
 module GameOfLife.Forms
-       ( Block(..)
+       ( block
        , place
        , Form
-       , toCoords
        , size
        ) where
 
 import GameOfLife.Game
 
-class Form a where
-  toCoords :: a -> [(Coord)]
-  size :: a -> (Coord)
+type Form = [(Coord)]
 
-data Block = Block
-instance Form Block where
-  toCoords _ = [(x,y) | x <- [0,1], y <- [0,1]]
-  size _ = (2,2)
+block :: Form
+block = [(x,y) | x <- [0,1], y <- [0,1]]
 
-place :: Form a => Board -> Coord -> a -> [(Coord,State)]
+place :: Board -> Coord -> Form -> [(Coord,State)]
 place board offset form =
-  let coordsInPlace = map (move offset) (toCoords form)
+  let coordsInPlace = map (move offset) form
   in zip coordsInPlace (repeat Alive)
+
+size :: Form -> Coord
+size form = ((maximum $ map fst form) + 1,(maximum $ map snd form) + 1)

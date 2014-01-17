@@ -28,7 +28,7 @@ main = let
   boardWidth = 20
   boardHeight = 20
   board = initBoard (boardWidth,boardHeight)
-  form = Block
+  form = block
   (formWidth,formHeight) = size form
   blocks = concat [place board (x,y) form
                   | x <- [0,(formWidth + 1)..(boardWidth - formWidth)]
