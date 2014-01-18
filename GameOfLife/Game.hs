@@ -11,6 +11,7 @@ module GameOfLife.Game
 import Data.List
 import Data.Array
 import System.IO
+import Control.Applicative
 
 data State = Alive | Dead deriving (Eq, Show)
 type Coord = (Int,Int)
@@ -29,7 +30,7 @@ getStates board coords = map (board!) coords
 
 neighbours :: Board -> Coord -> [Coord]
 neighbours board c@(x,y) =
-  filter (/= c) $ filter (inRange (bounds board)) [(x',y') | x' <- [x - 1..x + 1], y' <- [y - 1..y + 1]]
+  filter (/= c) $ filter (inRange (bounds board)) (liftA2 (,) [x - 1..x + 1] [y - 1..y + 1])
 
 nextGen :: Board -> Board
 nextGen board =
