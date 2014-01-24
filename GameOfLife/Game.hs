@@ -11,7 +11,7 @@ module GameOfLife.Game
 import Data.List
 import Data.Array
 import System.IO
-import Control.Applicative
+import Control.Monad
 
 data State = Alive | Dead deriving (Eq, Show)
 type Coord = (Int,Int)
@@ -29,19 +29,38 @@ getStates :: Board -> [Coord] -> [State]
 getStates board coords = map (board!) coords
 
 neighbours :: Board -> Coord -> [Coord]
-neighbours board c@(x,y) =
-  filter (/= c) $ filter (inRange (bounds board)) (liftA2 (,) [x - 1..x + 1] [y - 1..y + 1])
+neighbours board c@(dx,dy) = do
+  x <- [dx - 1..dx + 1]
+  y <- [dy - 1..dy + 1]
+  let point = (x,y)
+  guard $ point /= c
+  guard $ inRange (bounds board) point
+  return point
 
 nextGen :: Board -> Board
 nextGen board =
   let
     allCells = range (bounds board)
-    takeState state coords = map fst . filter (\(_,s) -> s == state) $ zip coords (getStates board coords)
+    takeState dstate coords = do
+      coord <- coords
+      let state = board ! coord
+      guard $ state == dstate
+      return (coord)
+    theLiving = takeState Alive allCells
+    theDead = takeState Dead allCells
     livingNeighbours = length . takeState Alive . neighbours board
-    zipState state coords = zip coords (repeat state)
-    underPop = zipState Dead . filter (\c -> (livingNeighbours c) < 2) $ takeState Alive allCells
-    overPop = zipState Dead .filter (\c -> (livingNeighbours c) > 3) $ takeState Alive allCells
-    newBorn = zipState Alive .filter (\c -> (livingNeighbours c) == 3) $ takeState Dead allCells
+    underPop = do
+      alive <- theLiving
+      guard $ (livingNeighbours alive) < 2
+      return (alive,Dead)
+    overPop = do
+      alive <- theLiving
+      guard $ (livingNeighbours alive) > 3
+      return (alive,Dead)
+    newBorn = do
+      dead <- theDead
+      guard $ (livingNeighbours dead) == 3
+      return (dead,Alive)
   in setStates board (concat [underPop, overPop, newBorn])
 
 evolve :: Board -> [Board]
